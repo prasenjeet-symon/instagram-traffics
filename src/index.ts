@@ -13,18 +13,25 @@ import {
   pick_single_user,
 } from "./utils/common-utils";
 import { whatis_my_ip } from "./whatismyip";
+import { Chance } from "chance";
 
-/**
- *  Load all names once
- */
-
+// Prepare all the fake names
 const all_names = load_names();
-create_new_yandex_mail(all_names.female_names);
+const name_lists = [all_names.female_names, all_names.male_names];
 
-// (async () => {
-//   while (true) {
-//     // change ip
-//     // await assign_new_ip();
-//     await create_new_yandex_mail(all_names.female_names);
-//   }
-// })();
+// Run the email creator
+
+(async () => {
+  let keep_running = true;
+  const chance = new Chance();
+
+  while (keep_running) {
+    try {
+      await assign_new_ip();
+      await create_new_yandex_mail(chance.pickone(name_lists));
+    } catch (error) {
+      keep_running = false;
+      console.log(error);
+    }
+  }
+})();

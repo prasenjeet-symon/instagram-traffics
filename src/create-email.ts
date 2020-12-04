@@ -90,12 +90,12 @@ export const create_yandex_mail = async (
 
   const browser = await puppeteer.launch({
     headless: false,
-    // args: ["--proxy-server=socks5://127.0.0.1:9050"],
-    slowMo: 50,
+    args: ["--proxy-server=socks5://127.0.0.1:9050"],
   });
 
   const incognitoB = await browser.createIncognitoBrowserContext();
   const page = await incognitoB.newPage();
+  page.setDefaultNavigationTimeout(0);
   await page.goto("https://passport.yandex.com/", {
     waitUntil: "domcontentloaded",
   });
@@ -130,8 +130,7 @@ export const create_yandex_mail = async (
   await page.focus("#hint_answer");
   await page.keyboard.type(security_question_answer, { delay: delay_time() });
 
-  await page.waitForNavigation({waitUntil:'domcontentloaded'});
-  console.log("navigation occured");
+  await page.waitForNavigation({ waitUntil: "networkidle2" });
   await browser.close();
 };
 
@@ -147,10 +146,7 @@ export const create_new_yandex_mail = async (all_names: any[]) => {
   const gender = user.gender;
 
   try {
-    try {
-      await create_yandex_mail(first_name, last_name, password, email);
-    } catch (error) {}
-
+    await create_yandex_mail(first_name, last_name, password, email);
     await save_created_email(
       first_name,
       last_name,
@@ -160,6 +156,10 @@ export const create_new_yandex_mail = async (all_names: any[]) => {
       gender
     );
   } catch (error) {
-    console.log(error, "error happens");
+    console.error(
+      error,
+      "Error occured while creating email... terminating process"
+    );
+    throw new Error("error while creating email. browser closed by human.");
   }
 };
