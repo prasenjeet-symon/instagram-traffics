@@ -130,7 +130,8 @@ export const create_yandex_mail = async (
   await page.focus("#hint_answer");
   await page.keyboard.type(security_question_answer, { delay: delay_time() });
 
-  await browser.waitForTarget((target) => false);
+  await page.waitForNavigation({waitUntil:'domcontentloaded'});
+  console.log("navigation occured");
   await browser.close();
 };
 
@@ -149,6 +150,7 @@ export const create_new_yandex_mail = async (all_names: any[]) => {
     try {
       await create_yandex_mail(first_name, last_name, password, email);
     } catch (error) {}
+
     await save_created_email(
       first_name,
       last_name,

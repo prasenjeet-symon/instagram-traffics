@@ -19,11 +19,12 @@ import { whatis_my_ip } from "./whatismyip";
  */
 
 const all_names = load_names();
+create_new_yandex_mail(all_names.female_names);
 
-(async () => {
-  while (true) {
-    // change ip
-    await assign_new_ip();
-    await create_new_yandex_mail(all_names.female_names);
-  }
-})();
+// (async () => {
+//   while (true) {
+//     // change ip
+//     // await assign_new_ip();
+//     await create_new_yandex_mail(all_names.female_names);
+//   }
+// })();
