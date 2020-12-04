@@ -4,81 +4,74 @@ import {
   delay_time,
   generate_email_id,
   generate_email_password,
+  give_date_of_birth,
   pick_single_user,
 } from "./utils/common-utils";
 
-export async function create_new_proton_email(
-  user_name: string,
+export const create_new_outlook_mail = async (
+  first_name: string,
+  last_name: string,
   password: string,
-  password_again: string
-) {
-  if (password_again !== password) {
-    return;
-  }
+  email: string
+) => {
+  const birth_date = give_date_of_birth();
 
-  /**
-   * Create new proton email, with human intervention , need to update this
-   */
   const browser = await puppeteer.launch({
     headless: false,
     args: ["--proxy-server=socks5://127.0.0.1:9050"],
-    slowMo: 50,
   });
   const incognitoB = await browser.createIncognitoBrowserContext();
-
   const page = await incognitoB.newPage();
-  await page.goto("https://protonmail.com/", {
+  page.setDefaultNavigationTimeout(0);
+  await page.goto("https://outlook.live.com/owa/", {
     waitUntil: "domcontentloaded",
-    timeout: 0,
   });
 
-  /**
-   * Click the button to create the account
-   */
-  await page.waitForSelector(".encrypted-email");
-  await page.click(".encrypted-email");
 
-  /**
-   * CLick the free plan of the proton  mail
-   */
+  await page.waitForSelector(".action-wrapper");
 
-  await page.waitForSelector("div[data-plan=free]", { visible: true });
-  const free_plan = await page.$("div[data-plan=free]");
-  free_plan.click();
-  await page.waitForSelector("#freePlan", { visible: true });
-  await page.click("#freePlan");
+  // await page.waitForSelector(".action");
+  await page.click(".action-wrapper", { delay: delay_time() });
 
-  /**
-   * Fill the username and password
-   */
+  await page.waitForSelector("#MemberName");
+  await page.focus("#MemberName");
+  await page.keyboard.type(email, { delay: delay_time() });
+  await page.click("#iSignupAction", { delay: delay_time() });
 
-  // Fill the username which is in iframe
-  await page.waitForSelector(".signupIframe-iframe>iframe");
-  const username_frame = await page.$(".signupIframe-iframe>iframe");
-  const username_frame_data = await username_frame.contentFrame();
-  await username_frame_data.waitForSelector("#username");
-  await username_frame_data.type("#username", user_name, { delay: 100 });
+  await page.waitForSelector("#PasswordInput");
+  await page.focus("#PasswordInput");
+  await page.keyboard.type(password, { delay: delay_time() });
 
-  // Fill the password
-  await page.focus("#password");
-  await page.keyboard.type(password, { delay: 200 });
+  await page.waitForSelector("#iSignupAction");
+  await page.click("#iSignupAction", { delay: delay_time() });
 
-  // Fill the password again
-  await page.focus("#passwordc");
-  await page.keyboard.type(password, { delay: 100 });
+  await page.waitForSelector("#FirstName");
+  await page.focus("#FirstName");
+  await page.keyboard.type(first_name, { delay: delay_time() });
 
-  // Click the submit button
-  await page.waitForSelector(".signupIframe-iframe>iframe.bottom");
-  const submit_iframe = await page.$(".signupIframe-iframe>iframe.bottom");
-  const submit_iframe_data = await submit_iframe.contentFrame();
-  await submit_iframe_data.click(".btn-submit", { delay: 50 });
+  await page.waitForSelector("#LastName");
+  await page.focus("#LastName");
+  await page.keyboard.type(last_name, { delay: delay_time() });
 
-  await page.waitForSelector(".pm_modal", { visible: true });
-  await page.click("#confirmModalBtn", { delay: 100 });
+  await page.waitForSelector("#iSignupAction");
+  await page.click("#iSignupAction", { delay: delay_time() });
 
-  await browser.waitForTarget(() => false);
+  await page.waitForSelector("#pageControlHost");
+  await page.waitForSelector("select[name=BirthMonth]");
+  await page.select("select[name=BirthMonth]", birth_date.month.toString());
+
+  await page.waitForSelector("select[name=BirthDay]");
+  await page.select("select[name=BirthDay]", birth_date.day.toString());
+
+  await page.waitForSelector("select[name=BirthYear]");
+  await page.select("select[name=BirthYear]", birth_date.year.toString());
+
+  await page.waitForSelector("input#iSignupAction");
+  await page.click("input#iSignupAction", { delay: delay_time() });
+
+  await page.waitForNavigation({ waitUntil: "networkidle2" });
   await browser.close();
-}
+};
 
 export const create_yandex_mail = async (
   first_name: string,
@@ -133,6 +126,36 @@ export const create_yandex_mail = async (
   await page.waitForNavigation({ waitUntil: "networkidle2" });
   await browser.close();
 };
+
+export const create_outlook_mail = async (all_names: any[]) => {
+  const user = pick_single_user(all_names);
+  const first_name = user.first_name;
+  const last_name = user.last_name;
+  const email = generate_email_id(
+    user.first_name.toLowerCase() + user.last_name.toLowerCase()
+  );
+  const password = generate_email_password(user.first_name);
+  const email_id = `${email}@outlook.com`;
+  const gender = user.gender;
+  try {
+    await create_new_outlook_mail(first_name, last_name, password, email);
+    await save_created_email(
+      first_name,
+      last_name,
+      email_id,
+      password,
+      "OUTLOOK",
+      gender
+    );
+  } catch (error) {
+    console.error(
+      error,
+      "Error occured while creating email... terminating process"
+    );
+    throw new Error("error while creating email. browser closed by human.");
+  }
+};
+
 
 export const create_new_yandex_mail = async (all_names: any[]) => {
   const user = pick_single_user(all_names);

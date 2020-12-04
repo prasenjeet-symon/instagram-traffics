@@ -1,11 +1,12 @@
 import * as puppeteer from "puppeteer";
 import {
-  create_new_proton_email,
   create_new_yandex_mail,
+  create_outlook_mail,
   create_yandex_mail,
 } from "./create-email";
 import {
   assign_new_ip,
+  connect_to_tor_controll,
   generate_email_id,
   generate_email_password,
   load_male_names_json,
@@ -14,6 +15,9 @@ import {
 } from "./utils/common-utils";
 import { whatis_my_ip } from "./whatismyip";
 import { Chance } from "chance";
+
+// connect to tor controll
+const tor_controll = connect_to_tor_controll();
 
 // Prepare all the fake names
 const all_names = load_names();
@@ -27,8 +31,10 @@ const name_lists = [all_names.female_names, all_names.male_names];
 
   while (keep_running) {
     try {
-      await assign_new_ip();
-      await create_new_yandex_mail(chance.pickone(name_lists));
+      await assign_new_ip(tor_controll);
+      await create_outlook_mail(chance.pickone(name_lists));
+      // await create_new_yandex_mail(chance.pickone(name_lists));
+      // await whatis_my_ip();
     } catch (error) {
       keep_running = false;
       console.log(error);

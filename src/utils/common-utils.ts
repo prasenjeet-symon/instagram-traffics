@@ -70,20 +70,25 @@ export const pick_single_user = (name_list: any[]) => {
   } as { first_name: string; last_name: string; gender: "male" | "female" };
 };
 
-export const assign_new_ip = (password = "password") => {
-  return new Promise<"OK">((resolve, reject) => {
-    var control = new TorControl({
-      // Your password for tor-control
-      password,
-      // Keep connection (persistent)
-      persistent: false,
-    });
+export const connect_to_tor_controll = () => {
+  var control = new TorControl({
+    // Your password for tor-control
+    password: "password",
+    // Keep connection (persistent)
+    persistent: true,
+  });
 
+  return control;
+};
+
+export const assign_new_ip = (control: any) => {
+  return new Promise<"OK">((resolve, reject) => {
     control.signalNewnym(function (err: any, status: any) {
       // Get a new circuit / ip
       if (err) {
         reject(err);
       } else {
+        console.log("changed ip address");
         resolve(status.messages[0]); // --> "OK"
       }
     });
@@ -94,4 +99,57 @@ export const delay_time = () => {
   const delays = [100, 200, 50, 400, 300, 150, 120, 110, 90, 70, 35];
   const chance = new Chance();
   return chance.pickone(delays);
+};
+
+export const give_date_of_birth = () => {
+  const days = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+  ];
+  const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const years = [
+    "1996",
+    "1997",
+    "1998",
+    "1999",
+    "2000",
+    "2001",
+    "2002",
+    "2003",
+    "2004",
+    "2005",
+    "2006",
+  ];
+
+  const chance = new Chance();
+
+  const day = chance.pickone(days);
+  const month = chance.pickone(months);
+  const year = chance.pickone(years);
+
+  return {
+    day,
+    month,
+    year,
+  };
 };
